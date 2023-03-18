@@ -2,13 +2,6 @@ package main
 
 import (
 	"context"
-	"io"
-	"net"
-	"net/http"
-	"os"
-	"sort"
-	"strings"
-
 	"github.com/google/go-github/v45/github"
 	"github.com/maxmind/mmdbwriter"
 	"github.com/maxmind/mmdbwriter/inserter"
@@ -19,6 +12,13 @@ import (
 	E "github.com/sagernet/sing/common/exceptions"
 	"github.com/sagernet/sing/common/rw"
 	"github.com/sirupsen/logrus"
+	"io"
+	"net"
+	"net/http"
+	"os"
+	"sort"
+	"strings"
+	"time"
 )
 
 var githubClient *github.Client
@@ -187,12 +187,11 @@ func release(source string, destination string) error {
 	}
 	destinationRelease, err := fetch(destination)
 	if err != nil {
+
 		logrus.Warn("missing destination latest release")
 	} else {
-		if os.Getenv("NO_SKIP") != "true" && strings.Contains(*destinationRelease.Name, *sourceRelease.TagName) {
+		if os.Getenv("NO_SKIP") != "true" && *sourceRelease.Name != "" && strings.Contains(*destinationRelease.Name, *sourceRelease.Name) {
 			logrus.Info("already latest")
-			logrus.Info("destination latest release is ", *destinationRelease.Name)
-			logrus.Info("source latest release is ", *sourceRelease.TagName)
 			setActionOutput("skip", "true")
 			return nil
 		}
@@ -228,7 +227,15 @@ func release(source string, destination string) error {
 	if err != nil {
 		return err
 	}
-	setActionOutput("tag", *sourceRelease.Name)
+	if *sourceRelease.Name == "" {
+		if *sourceRelease.TagName != "" {
+			setActionOutput("tag", *sourceRelease.TagName)
+		} else {
+			setActionOutput("tag", time.Now().Format("200601021504"))
+		}
+	} else {
+		setActionOutput("tag", *sourceRelease.Name)
+	}
 	return nil
 }
 
