@@ -191,6 +191,8 @@ func release(source string, destination string) error {
 	} else {
 		if os.Getenv("NO_SKIP") != "true" && strings.Contains(*destinationRelease.Name, *sourceRelease.Name) {
 			logrus.Info("already latest")
+			logrus.Info("destination latest release is ", *destinationRelease.Name)
+			logrus.Info("source latest release is ", *sourceRelease.Name)
 			setActionOutput("skip", "true")
 			return nil
 		}
